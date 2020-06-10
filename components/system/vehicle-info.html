@@ -1,0 +1,203 @@
+﻿<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar" lay-filter="vehicleTbSearchForm">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">客户姓名:</label>
+                        <div class="layui-input-inline">
+                            <input name="customerRealName" class="layui-input" placeholder="输入姓名"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn" lay-filter="vehicleTbSearch" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="vehicleTable" lay-filter="vehicleTable"></table>
+        </div>
+    </div>
+</div>
+
+<!-- 表格操作列 -->
+<script type="text/html" id="vehicleTbBar">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<!-- 表单弹窗 -->
+<script type="text/html" id="vehicleEditDialog">
+    <form id="vehicleEditForm" lay-filter="vehicleEditForm" class="layui-form model-form">
+        <input name="id" type="hidden"/>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">客户姓名:</label>
+            <div class="layui-input-block">
+                <input name="customerRealName" placeholder="请输入客户姓名" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">车辆信息:</label>
+            <div class="layui-input-block">
+                <input name="vehicleInfo" placeholder="请输入车辆信息" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">客户手机号:</label>
+            <div class="layui-input-block">
+                <input name="customerPhoneNumber" placeholder="请输入手机号" class="layui-input"
+                       lay-verType="tips" lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">上次车检时间:</label>
+            <div class="layui-input-block">
+                <input id="dateSelect1" name="lastInspectionDay" placeholder="请选择上次车检时间"
+                       class="layui-input icon-date" autocomplete="off" lay-verType="message"
+                       lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">车险到期时间:</label>
+            <div class="layui-input-block">
+                <input id="dateSelect2" name="insuranceExpiryDay" placeholder="请选择车险到期时间"
+                       class="layui-input icon-date" autocomplete="off" lay-verType="message"
+                       lay-verify="required" required/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-required">备注:</label>
+            <div class="layui-input-block">
+                <input name="remarks" placeholder="请输入备注信息" class="layui-input"
+                       lay-verType="tips"/>
+            </div>
+        </div>
+        <div class="layui-form-item text-right">
+            <button class="layui-btn" lay-filter="vehicleEditSubmit" lay-submit>保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+        </div>
+    </form>
+</script>
+
+<!-- js部分 -->
+<script>
+    layui.use(['layer', 'form', 'table', 'admin', 'laydate'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var admin = layui.admin;
+        var laydate = layui.laydate;
+
+        form.render('select', 'vehicleTbSearchForm');
+
+        /* 渲染表格 */
+        var insTb = table.render({
+            elem: '#vehicleTable',
+            url: layui.setter.baseServer + '/vehicle-management-service/vehicleRegisterInfo/list',
+            page: true,
+            toolbar: ['<p>',
+                '<button lay-event="add" class="layui-btn layui-btn-sm icon-btn"><i class="layui-icon">&#xe654;</i>添加</button>&nbsp;',
+                '</p>'].join(''),
+            cellMinWidth: 100,
+            cols: [[
+                {type: 'numbers'},
+                {field: 'customerRealName', title: '客户姓名', sort: true},
+                {field: 'vehicleInfo', title: '车辆信息', sort: true},
+                {field: 'customerPhoneNumber', title: '联系电话', sort: true},
+                {field: 'lastInspectionDay', title: '上次车检时间', sort: true},
+                {field: 'insuranceExpiryDay', title: '车险到期时间', sort: true},
+                {title: '操作', toolbar: '#vehicleTbBar', align: 'center', minWidth: 200}
+            ]]
+        });
+
+        laydate.render({
+            trigger: 'click',
+            elem: '#dateSelect1'
+        });
+
+        laydate.render({
+            trigger: 'click',
+            elem: '#dateSelect2'
+        });
+
+        /* 表格搜索 */
+        form.on('submit(vehicleTbSearch)', function (data) {
+            insTb.reload({where: data.field, page: {curr: 1}});
+            return false;
+        });
+
+        /* 表格工具条点击事件 */
+        table.on('tool(vehicleTable)', function (obj) {
+            if (obj.event === 'edit') { // 修改
+                showEditModel(obj.data);
+            } else if (obj.event === 'del') { // 删除
+                doDel(obj);
+            }
+        });
+
+        /* 表格头工具栏点击事件 */
+        table.on('toolbar(vehicleTable)', function (obj) {
+            if (obj.event === 'add') { // 添加
+                showEditModel();
+            }
+        });
+
+        /* 显示表单弹窗 */
+        function showEditModel(mData) {
+            admin.open({
+                type: 1,
+                title: (mData ? '修改' : '添加') + '车辆信息',
+                content: $('#vehicleEditDialog').html(),
+                success: function (layero, dIndex) {
+                    // 回显表单数据
+                    form.val('vehicleEditForm', mData);
+                    // 表单提交事件
+                    form.on('submit(vehicleEditSubmit)', function (data) {
+                        var loadIndex = layer.load(2);
+                        admin.req(mData ? '/vehicle-management-service/vehicleRegisterInfo/update' : '/vehicle-management-service/vehicleRegisterInfo/add', JSON.stringify(data.field), function (res) {
+                            layer.close(loadIndex);
+                            if (res.status === 200) {
+                                layer.close(dIndex);
+                                layer.msg(res.msg, {icon: 1});
+                                insTb.reload({page: {curr: 1}});
+                            } else {
+                                layer.msg(res.msg, {icon: 2});
+                            }
+                        }, 'post');
+                        return false;
+                    });
+                    // 禁止弹窗出现滚动条
+                    $(layero).children('.layui-layer-content').css('overflow', 'visible');
+                }
+            });
+        }
+
+        /* 删除 */
+        function doDel(obj) {
+            layer.confirm('确定要删除选中数据吗？', {
+                skin: 'layui-layer-admin',
+                shade: .1
+            }, function (i) {
+                layer.close(i);
+                var loadIndex = layer.load(2);
+                admin.req('/vehicle-management-service/vehicleRegisterInfo/delete', {
+                    id: obj.data ? obj.data.id : ''
+                }, function (res) {
+                    layer.close(loadIndex);
+                    if (res.status === 200) {
+                        layer.msg(res.msg, {icon: 1});
+                        insTb.reload({page: {curr: 1}});
+                    } else {
+                        layer.msg(res.msg, {icon: 2});
+                    }
+                }, 'post');
+            });
+        }
+    });
+</script>

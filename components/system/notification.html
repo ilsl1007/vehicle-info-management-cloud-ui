@@ -1,0 +1,70 @@
+﻿<!-- 正文开始 -->
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <!-- 表格工具栏 -->
+            <form class="layui-form toolbar" lay-filter="notificationTbSearchForm">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">接收人:</label>
+                        <div class="layui-input-inline">
+                            <input name="belongToUser" class="layui-input" placeholder="输入姓名"/>
+                        </div>
+                    </div>
+                    <div class="layui-inline">&emsp;
+                        <button class="layui-btn icon-btn" lay-filter="notificationTbSearch" lay-submit>
+                            <i class="layui-icon">&#xe615;</i>搜索
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <!-- 数据表格 -->
+            <table id="notificationTable" lay-filter="notificationTable"></table>
+        </div>
+    </div>
+</div>
+
+<!-- js部分 -->
+<script>
+    layui.use(['layer', 'form', 'table', 'util'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var util = layui.util;
+        form.render('select', 'notificationTbSearchForm');
+
+        /* 渲染表格 */
+        var insTb = table.render({
+            elem: '#notificationTable',
+            url: layui.setter.baseServer + '/notification-service/notification/list',
+            page: true,
+            cellMinWidth: 100,
+            cols: [[
+                {type: 'numbers'},
+                {field: 'belongToUser', title: '接收人', sort: true},
+                {field: 'content', title: '通知内容', sort: true},
+                {
+                    title: '状态', templet: function (d) {
+                        if (d.readStatus) {
+                            return '<span class="layui-badge layui-badge-green">已读</span>';
+                        } else {
+                            return '<span class="layui-badge layui-badge-gray">未读</span>';
+                        }
+                    }, align: 'center', width: 80
+                },
+                {
+                    field: 'createdTime', title: '创建时间', templet: function (d) {
+                        return util.toDateString(d.createTime);
+                    }, sort: true
+                }
+            ]]
+        });
+
+        /* 表格搜索 */
+        form.on('submit(notificationTbSearch)', function (data) {
+            insTb.reload({where: data.field, page: {curr: 1}});
+            return false;
+        });
+    });
+</script>
