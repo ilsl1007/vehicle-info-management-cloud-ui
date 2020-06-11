@@ -1,0 +1,7 @@
+# File-based project format
+.idea/**
+*.iws
+*.iml
+
+# macOS
+.DS_Store
