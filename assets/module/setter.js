@@ -2,8 +2,8 @@
 
 layui.define(['table'], function (exports) {
     var setter = {
-        //baseServer: '/api/', // 接口地址，实际项目请换成http形式的地址
-        baseServer: 'http://localhost:9030', // 接口地址，实际项目请换成http形式的地址
+        //baseServer: '/api/', // 接口地址
+        baseServer: 'http://localhost:9030', // 接口地址
         localServer: "json/", // 用于请求本地静态资源
         pageTabs: false,   // 是否开启多标签
         cacheTab: true,  // 是否记忆Tab
